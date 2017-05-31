@@ -1,4 +1,4 @@
-#COSC3000 Graphics Assignment
+#COSC3000 Graphics Assignment, Benedict Gattas (43915398)
 
 #Icebreaker Game
 
@@ -7,92 +7,99 @@ from OpenGL.GLUT import *
 from OpenGL.GLU import *
 from PIL.Image import *
 from icePath.mouseInteractor import *
+from icePath.Block import *
 
-import sys
-import math
-import time
+from sys import *
+from math import *
+from time import *
 
 #Global window handle for game screen
 windowHandle = 0
+
 #Texture storage
 blockTexID = 0
 blockImage = Image( )
 iceTexID = 0
 iceImage = Image( )
 
-
-def ResizeGLScene( width, height):
-    # prevent a divide-by-zero error if the window is too small
-    if height == 0:
-        height = 1
-
-    # reset the current viewport and recalculate the perspective transformation
-    # for the projection matrix
-    glViewport(0, 0, width, height)
-    glMatrixMode(GL_PROJECTION)
-    glLoadIdentity()
-    gluPerspective(45.0, float(width) / float(height), 0.1, 100.0)
-
-    # return to the modelview matrix mode
-    glMatrixMode(GL_MODELVIEW)
+#Rotating the block
+Phi = 0
+Theta = 0
+Phi_sign = 1
 
 
-def InitGL( width, height ):
-    # use black when clearing the colour buffers -- this will give us a black
-    # background for the window
+def initGL( width, height ):
+    # Black window background
     glClearColor( 0, 0, 0, 0 )
-    # enable the depth buffer to be cleared
     glClearDepth( 1.0 )
-    # set which type of depth test to use
     glDepthFunc( GL_LESS )
-    # enable depth testing
     glEnable( GL_DEPTH_TEST )
-    # enable smooth colour shading
     glShadeModel( GL_SMOOTH )
+    glEnable(GL_COLOR_MATERIAL)
 
-    ResizeGLScene( width, height )
+    resizeGLScene( width, height )
+
+def setupLight():
+    x = 0.0
+    y = 2.0
+    z = 0.0
+
+    #Setup light properties
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, GLfloat_3(1, 1, 1))
+    glLightfv(GL_LIGHT0, GL_AMBIENT, GLfloat_3(0, 0, 0))
+    glLightfv(GL_LIGHT0, GL_SPECULAR, GLfloat_3(1, 1, 1))
+    glLightfv(GL_LIGHT0, GL_POSITION, GLfloat_4(x, y, z, 1))
+    glEnable(GL_LIGHT0)
+
+    #Make the light a yellow sphere
+    glPushMatrix()
+    glColor3f(1.0, 1.0, 0.0)
+    glTranslatef(x, y, z)
+    glutSolidSphere(0.125, 30, 30)
+    # glDisable(GL_COLOR_MATERIAL)
+    glPopMatrix()
 
 
-def DrawGLScene():
-    global bAltTexCoords, nAngle, nTailLength, tColour, mouseInteract
+def drawGLScene():
+    global bAltTexCoords, mouseInteract, Theta
 
-    # clear the screen and depth buffer
+    #Clear screen and depth buffer
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-    # reset the matrix stack with the identity matrix
+    #Reset matrix stack with the identity matrix
     glLoadIdentity()
+    glTranslatef(0, 0, -6.0)
+    setupLight()
+    mouseInteract.applyTransformation()
 
-    # translate away from the camera then rotate the axis according
-    # to the user-changeable rotation values
-    glTranslatef(0, 0, -3.0)
-    # glRotated( nRotX, 1, 0, 0 )
-    # glRotated( nRotY, 0, 1, 0 )
-    mouseInteract.applyTransformation()  # Perform transforms accourding to mouse input
 
     glEnable(GL_TEXTURE_2D)
 
-    # *********************************************************************************#
-    # *To see the window model without textures, redundant lines have been added below.#
-    # *From Task 3 on, comment or delete all lines indicated with with #### below:     #
-    # *********************************************************************************#
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)  ####\
     glLineWidth(2)  #### > REMOVE at Task 3
     glColor4f(0, 0, 0, 1)  ####/
+
+    player = Block(blockTexID)
+    player.drawBlock()
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)  ####\
     glEnable(GL_POLYGON_OFFSET_FILL)  #### |
     glPolygonOffset(1, 1)  #### |
     glColor4f(1, 1, 1, 1)  #### > REMOVE at Task 3
+    player.drawBlock()
+
 
     glDisable(GL_POLYGON_OFFSET_FILL)  ####/
 
 
-    # since this is double buffered, we need to swap the buffers in order to
-    # display what we just drew
+
     glutSwapBuffers()
 
 
+
+
+
 #User input to game, configured here
-def KeyPressed(key, x, y):
+def keyPressed(key, x, y):
     global bAltTexCoords, bRepeatTexture
 
     key = ord(key)
@@ -122,17 +129,30 @@ def main():
     mouseInteract = MouseInteractor( 0.01, 1 )
     mouseInteract.registerCallbacks( )
 
-    glutDisplayFunc( DrawGLScene )
+    glutDisplayFunc( drawGLScene )
 
-    glutIdleFunc( DrawGLScene )
+    glutIdleFunc( drawGLScene )
 
-    glutReshapeFunc( ResizeGLScene )
-    glutKeyboardFunc( KeyPressed )
+    glutReshapeFunc( resizeGLScene )
+    glutKeyboardFunc( keyPressed )
 
 
-    InitGL( width, height )
+    initGL( width, height )
 
     glutMainLoop( )
 
+def resizeGLScene( width, height):
+    # prevent a divide-by-zero error if the window is too small
+    if height == 0:
+        height = 1
+
+    # reset the current viewport
+    glViewport(0, 0, width, height)
+    glMatrixMode(GL_PROJECTION)
+    glLoadIdentity()
+    gluPerspective(45.0, float(width) / float(height), 0.1, 100.0)
+
+    # return to the modelview matrix mode
+    glMatrixMode(GL_MODELVIEW)
 
 main()
