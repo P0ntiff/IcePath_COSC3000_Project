@@ -4,6 +4,7 @@ from OpenGL.GL import *
 from OpenGL.GLUT import *
 from OpenGL.GLU import *
 from time import *
+from PIL.Image import *
 
 #For a rectangular prism pivoting along the ground
 #0 = rest
@@ -14,6 +15,47 @@ from time import *
 #8 = Hor. to Hor. West
 
 #Main player controlled rectangular prism
+
+blockImage = Image( )
+blockTexID = 0
+
+def LoadImage(file):
+    image = Image( )
+
+    try:
+        foo = open( file )
+
+        image.sizeX = foo.size[0]
+        image.sizeY = foo.size[1]
+        image.data = foo.tobytes("raw", "RGBX", 0, -1)
+    except:
+        print("Could not load image :(")
+        sys.exit()
+
+    return image
+
+
+#
+# Initialises the textures being used for the scene
+#
+def InitTexturing():
+    global blockImage, blockTexID
+
+    # create textures
+    blockTexID = glGenTextures( 1 )
+
+    glBindTexture(GL_TEXTURE_2D, blockTexID)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+    glTexImage2D(GL_TEXTURE_2D, 0, 4,
+                 blockImage.sizeX, blockImage.sizeY,
+                 0, GL_RGBA, GL_UNSIGNED_BYTE, blockImage.data)
+
+blockImage = LoadImage( "metal.bmp")
+InitTexturing()
+
 class Block:
     def __init__(self, texID):
         self._texID = texID
@@ -81,10 +123,10 @@ class Block:
             glPushMatrix()
 
             glBegin(GL_QUADS)
-            glVertex3f(0, 0, 0)
-            glVertex3f(1.0, 0, 0)
-            glVertex3f(1.0, 2.0, 0)
-            glVertex3f(0, 2.0, 0)
+            glVertex3f(0, 0, 0); glTexCoord2f(0, 0)
+            glVertex3f(1.0, 0, 0); glTexCoord2f(2, 0)
+            glVertex3f(1.0, 2.0, 0); glTexCoord2f(2, 2)
+            glVertex3f(0, 2.0, 0); glTexCoord2f(0, 2)
             glEnd()
 
             glPopMatrix()
@@ -93,17 +135,18 @@ class Block:
             glPushMatrix()
 
             glBegin(GL_QUADS)
-            glVertex3f(0, 0, 0)
-            glVertex3f(0, 0, -1.0)
-            glVertex3f(0, 1.0, -1.0)
-            glVertex3f(0, 1.0, 0)
+            glVertex3f(0, 0, 0); glTexCoord2f(0, 0)
+            glVertex3f(0, 0, -1.0); glTexCoord2f(0, 1)
+            glVertex3f(0, 1.0, -1.0); glTexCoord2f(1, 1)
+            glVertex3f(0, 1.0, 0); glTexCoord2f(1, 0)
             glEnd()
 
             glPopMatrix()
 
 
         glPushMatrix()
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+        #glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+        glBindTexture(GL_TEXTURE_2D, blockTexID)
 
         # #State 1 to State 2
         # glTranslatef(1.0, 0, 0)
@@ -118,7 +161,7 @@ class Block:
         # glRotatef(-90, 0, 1.0, 0)
 
         ruler()
-        glColor3f(0.6, 0.6, 0.6)
+#        glColor3f(0.6, 0.6, 0.6)
         #TOP, 2 SIDES, and BOTTOM
         # glTranslatef(-1.0, -1.0, 0)
         drawLongFace()
@@ -179,6 +222,7 @@ class Block:
 
     def getHorizontal(self):
         return self._horizontal
+
 
 
 

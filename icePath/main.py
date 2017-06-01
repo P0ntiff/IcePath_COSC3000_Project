@@ -6,7 +6,7 @@ from OpenGL.GL import *
 from OpenGL.GLUT import *
 from OpenGL.GLU import *
 from icePath.mouseInteractor import *
-from icePath.Block import *
+#from icePath.Block import *
 from PIL.Image import *
 
 from math import *
@@ -22,19 +22,23 @@ iceTexID = 0
 iceImage = Image( )
 waterTexID = 0
 waterImage = Image( )
+metalTexID = 0
+metalImage = Image( )
+
 
 #Rotating the block
 rotationMode = 0
-player = Block(blockTexID)
+#player = Block(blockTexID)
 
 
 def initGL( width, height ):
-    global waterImage, iceImage, blockImage
+    global waterImage, iceImage, blockImage, metalImage
 
     #load images
     waterImage = LoadImage( "water.bmp" )
     iceImage = LoadImage( "ice.bmp" )
-    blockImage = LoadImage( "wood.bmp")
+    blockImage = LoadImage( "wood.bmp" )
+    metalImage = LoadImage( "metal.bmp" )
     InitTexturing()
 
     # Black window background
@@ -49,7 +53,7 @@ def initGL( width, height ):
     resizeGLScene( width, height )
 
 def setupLight():
-    x = 1.0
+    x = 2.0
     y = 3.0
     z = -1.0
 
@@ -61,12 +65,12 @@ def setupLight():
     glEnable(GL_LIGHT0)
 
     #Make the light a white sphere
-    glPushMatrix()
-    glColor3f(1.0, 1.0, 1.0)
-    glTranslatef(x, y, z)
-    glutSolidSphere(0.125, 30, 30)
-    glDisable(GL_COLOR_MATERIAL)
-    glPopMatrix()
+    # glPushMatrix()
+    # glColor3f(1.0, 1.0, 1.0)
+    # glTranslatef(x, y, z)
+    # glutSolidSphere(0.125, 30, 30)
+    # glDisable(GL_COLOR_MATERIAL)
+    # glPopMatrix()
 
 
 def drawGLScene():
@@ -87,18 +91,146 @@ def drawGLScene():
     glDisable(GL_LIGHTING)
     glDisable(GL_TEXTURE_2D)
 
- #   glEnable(GL_TEXTURE_2D)
+    #Block Draw: TODO: Move texturing to Block.py so can be removed below
+    glEnable(GL_TEXTURE_2D)
     glEnable(GL_COLOR_MATERIAL)
     glEnable(GL_LIGHTING)
-    player.drawBlock()
+    drawBlock()
     glDisable(GL_LIGHTING)
 
 
     glutSwapBuffers()
 
+def drawBlock():
+    global metalTexID
+    def ruler():
+        # ORIGIN = PINK
+        glPushMatrix()
+        glColor3f(1.0, 0, 1.0)
+        glTranslatef(0, 0, 0)
+        glutSolidCube(0.125)
+        glPopMatrix()
+
+        # 1 in Y direction = BLUE
+        glPushMatrix()
+        glColor3f(0, 0, 1.0)
+        glTranslatef(0, 1.0, 0)
+        glutSolidCube(0.125)
+        glTranslatef(0, -1.0, 0)
+        glPopMatrix()
+
+        # -1 in Z direction = RED
+        glPushMatrix()
+        glColor3f(1.0, 0, 0)
+        glTranslatef(0, 0, -1.0)
+        glutSolidCube(0.125)
+        glTranslatef(0, 0, 1.0)
+        glPopMatrix()
+
+        # 1 in X direction = GREEN
+        glPushMatrix()
+        glColor3f(0, 1.0, 0)
+        glTranslatef(1.0, 0, 0)
+        glutSolidCube(0.125)
+        glTranslatef(-1.0, 0, 0)
+        glPopMatrix()
+
+        x = [20, 0, 0]
+        y = [0, 20, 0]
+        z = [0, 0, -20]
+        o = [0, 0, 0]
+
+        glBegin(GL_LINES)
+
+        glColor3fv([0, 1, 0])
+        glVertex3fv(o)
+        glVertex3fv(x)
+
+        glColor3fv([0, 0, 1])
+        glVertex3fv(o)
+        glVertex3fv(y)
+
+        glColor3fv([1, 0, 0])
+        glVertex3fv(o)
+        glVertex3fv(z)
+
+        glEnd()
+
+    def drawLongFace():
+        glPushMatrix()
+
+        glBegin(GL_QUADS)
+        glVertex3f(0, 0, 0); glTexCoord2f(0, 0)
+        glVertex3f(1.0, 0, 0); glTexCoord2f(2, 0)
+        glVertex3f(1.0, 2.0, 0); glTexCoord2f(2, 2)
+        glVertex3f(0, 2.0, 0); glTexCoord2f(0, 2)
+        glEnd()
+
+        glPopMatrix()
+
+    def drawSquareFace():
+        glPushMatrix()
+
+        glBegin(GL_QUADS)
+        glVertex3f(0, 0, 0); glTexCoord2f(0, 0)
+        glVertex3f(0, 0, -1.0); glTexCoord2f(1, 0)
+        glVertex3f(0, 1.0, -1.0); glTexCoord2f(1, 1)
+        glVertex3f(0, 1.0, 0); glTexCoord2f(0, 1)
+        glEnd()
+
+        glPopMatrix()
+
+
+    glPushMatrix()
+    #glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+   # glDisable(GL_COLOR_MATERIAL)
+    glBindTexture(GL_TEXTURE_2D, metalTexID)
+
+    # #State 1 to State 2
+
+
+
+    #State 2 to State 2
+    # glRotatef(90, 0, 1.0, 0)
+    # glTranslatef(0, 0, -1)
+    # glRotatef(-90, 0, 1.0, 0)
+
+#        glColor3f(0.6, 0.6, 0.6)
+    #TOP, 2 SIDES, and BOTTOM
+    glTranslatef(0, -0.5, 0)
+
+    # glTranslatef(3.0, 0, -6.0)
+    # glRotatef(90, 0, 1.0, 0)
+    # glTranslatef(-1.0, 0, 0)
+    # glRotatef(90, 1.0, 0, 0)
+
+
+    drawLongFace()
+    glRotatef(90, 0, 0, -1)
+    drawSquareFace()
+    glRotatef(-90, 0, 0, -1)
+    glTranslatef(0, 0, -1.0)
+    drawLongFace()
+    glRotatef(-90, 0, 0, -1)
+    glTranslatef(2.0, -1.0, 1.0)
+    drawSquareFace()
+
+    #OTHER TWO SIDES
+    glRotatef(90, 1.0, 0, 0)
+    glRotatef(90, 0, 0, 1.0)
+    glTranslatef(-1.0, 0, 0)
+    drawLongFace()
+
+    glTranslatef(0, 0, -1.0)
+    drawLongFace()
+
+
+    glPopMatrix()
+
+
 
 def drawIceRink():
-    global iceTexID
+    global iceTexID, waterTexID
 
     def drawLongTop():
         glPushMatrix()
@@ -127,20 +259,34 @@ def drawIceRink():
     def drawShortSide():
         glPushMatrix()
 
-        glBegin(GL_QUADS)
-        glVertex3f(0, 0, 0.2)#; glTexCoord3f(0, 0, )
-        glVertex3f(0, 0.5, 0.2)
-        glVertex3f(-0.2, 0.5, 0.2)
-        glVertex3f(-0.2, 0, 0.2)
+        glBegin(GL_QUADS);
+        glVertex3f(0, 0, 0.2); glTexCoord2f(1, 0)
+        glVertex3f(0, 0.5, 0.2); glTexCoord2f(1, 1)
+        glVertex3f(-0.2, 0.5, 0.2); glTexCoord2f(0, 1)
+        glVertex3f(-0.2, 0, 0.2); glTexCoord2f(0, 0)
         glEnd()
 
         glPopMatrix()
 
-
-    #glColor3f(1.0, 0, 0)
-    glBindTexture( GL_TEXTURE_2D, iceTexID )
+    #Drawing the ice
+    #With hardcoded water tiles
+    #Shameless
     for i in range(0, 10):
         for j in range(0, 10):
+            if (i == 2) and (j == 6):
+                glBindTexture(GL_TEXTURE_2D, waterTexID)
+            elif (i == 3) and (j == 4):
+                glBindTexture(GL_TEXTURE_2D, waterTexID)
+            elif (i == 7) and (j == 8):
+                glBindTexture(GL_TEXTURE_2D, waterTexID)
+            elif (i == 5) and (j == 5):
+                glBindTexture(GL_TEXTURE_2D, waterTexID)
+            elif (i == 7) and (j == 6):
+                glBindTexture(GL_TEXTURE_2D, waterTexID)
+            elif (i == 7) and (j == 2):
+                glBindTexture(GL_TEXTURE_2D, waterTexID)
+            else:
+                glBindTexture(GL_TEXTURE_2D, iceTexID)
             glPushMatrix()
             glBegin(GL_QUADS)
             glVertex3f(float(i), 0, float(-1*j));  glTexCoord2f(0, 0)
@@ -151,6 +297,8 @@ def drawIceRink():
             glPopMatrix()
 
     glBindTexture( GL_TEXTURE_2D, blockTexID )
+
+    #Drawing the wooden panelling
     for i in range(0, 4):
         drawShortSide()
         drawLongSide()
@@ -165,8 +313,25 @@ def drawIceRink():
         glTranslatef(0, 0, -10)
         glRotatef(-90, 0, 1.0, 0)
 
+    glTranslatef(0, 0.5, 0)
+    glRotatef(90, 0, 0, 1.0)
+    for i in range(0, 4):
+        drawShortSide()
+        drawLongSide()
+        drawLongTop()
+        glTranslatef(-0.2, 0, 0)
+        drawLongSide()
+        glTranslatef(0.2, 0, 0)
+        glTranslatef(0, -0.5, 0)
+        drawLongTop()
+        glTranslatef(0, 0.5, 0)
+
+        glTranslatef(0, 0, -10)
+        glRotatef(-90, 1.0, 0, 0)
+    glRotatef(-90, 0, 0, 1.0)
 
 #User input to game, configured here
+#Or would be
 def keyPressed(key, x, y):
     global bAltTexCoords, bRepeatTexture, blockHorizontal, rotationMode, player
 
@@ -252,12 +417,13 @@ def LoadImage(file):
 # Initialises the textures being used for the scene
 #
 def InitTexturing():
-    global waterImage, iceImage, waterTexID, iceTexID, blockImage, blockTexID
+    global waterImage, iceImage, waterTexID, iceTexID, blockImage, blockTexID, metalImage, metalTexID
 
     # create textures
     waterTexID = glGenTextures( 1 )
     iceTexID = glGenTextures( 1 )
     blockTexID = glGenTextures( 1 )
+    metalTexID = glGenTextures( 1 )
 
     # just use linear filtering
     glBindTexture(GL_TEXTURE_2D, waterTexID)
@@ -286,5 +452,14 @@ def InitTexturing():
     glTexImage2D(GL_TEXTURE_2D, 0, 4,
                  blockImage.sizeX, blockImage.sizeY,
                  0, GL_RGBA, GL_UNSIGNED_BYTE, blockImage.data)
+
+    glBindTexture(GL_TEXTURE_2D, metalTexID)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+    glTexImage2D(GL_TEXTURE_2D, 0, 4,
+                 metalImage.sizeX, metalImage.sizeY,
+                 0, GL_RGBA, GL_UNSIGNED_BYTE, metalImage.data)
 
 main()
