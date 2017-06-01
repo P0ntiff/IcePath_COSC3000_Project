@@ -337,19 +337,19 @@ def keyPressed(key, x, y):
 
     key = ord(key)
 
-    if key == 27:
-        glutDestroyWindow(windowHandle)
-        sys.exit()
-    elif key == ord('W') or key == ord('w'):
-        player.handleWPress()
-    elif key == ord('S') or key == ord('s'):
-        player.handleSPress()
-    elif key == ord('A') or key == ord('a'):
-        player.handleAPress()
-    elif key == ord('D') or key == ord('d'):
-        player.handleDPress()
-    else:
-        return
+    # if key == 27:
+    #     glutDestroyWindow(windowHandle)
+    #     sys.exit()
+    # elif key == ord('W') or key == ord('w'):
+    #     player.handleWPress()
+    # elif key == ord('S') or key == ord('s'):
+    #     player.handleSPress()
+    # elif key == ord('A') or key == ord('a'):
+    #     player.handleAPress()
+    # elif key == ord('D') or key == ord('d'):
+    #     player.handleDPress()
+    # else:
+    #     return
 
 
 def main():
