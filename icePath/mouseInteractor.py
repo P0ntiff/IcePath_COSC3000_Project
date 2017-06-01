@@ -8,7 +8,7 @@
 import sys
 import math
 
-from interactionMatrix import InteractionMatrix
+from icePath.interactionMatrix import *
 
 try:
   from OpenGL.GLUT import *
