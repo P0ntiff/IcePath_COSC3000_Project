@@ -25,23 +25,27 @@ waterImage = Image( )
 metalTexID = 0
 metalImage = Image( )
 
+#Blocked tiles on the map (hardcoded)
+water = [(2, 6), (3, 4), (7, 8), (5, 5), (7,6), (6, 2)]
 
-#Rotating the block
-rotationMode = 0
-#player = Block(blockTexID)
-
+#Orientation of the block: Vertical = 0, Horizontal East-West = 1, Horizontal North-South = 2
+orientation = 0
+#Block's position in the 10x10 grid in the ice field (start at 0,0)
+#Coordinate system is (x, -z)
+positionX = 0
+positionZ = 0
 
 def initGL( width, height ):
     global waterImage, iceImage, blockImage, metalImage
 
-    #load images
+    #Load images
     waterImage = LoadImage( "water.bmp" )
     iceImage = LoadImage( "ice.bmp" )
     blockImage = LoadImage( "wood.bmp" )
     metalImage = LoadImage( "metal.bmp" )
     InitTexturing()
 
-    # Black window background
+    #Black background
     glClearColor( 0, 0, 0, 0 )
     glClearDepth( 1.0 )
     glDepthFunc( GL_LESS )
@@ -49,7 +53,6 @@ def initGL( width, height ):
     glShadeModel( GL_SMOOTH )
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-
     resizeGLScene( width, height )
 
 def setupLight():
@@ -72,139 +75,109 @@ def setupLight():
     # glDisable(GL_COLOR_MATERIAL)
     # glPopMatrix()
 
-
 def drawGLScene():
-    global bAltTexCoords, mouseInteract, Theta, Phi, blockHorizontal, rotationMode
+    global mouseInteract
 
     #Clear screen and depth buffer
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-    #Reset matrix stack with the identity matrix
+
+    #Reset matrix stack
     glLoadIdentity()
     glTranslatef(0, 0, -8.0)
     mouseInteract.applyTransformation()
+
+    #Setup the light of the scene
     setupLight()
 
-    #The Ice Rink
+    #The Ice Field
     glEnable(GL_LIGHTING)
     glEnable(GL_TEXTURE_2D)
-    drawIceRink()
+    drawIceField()
     glDisable(GL_LIGHTING)
     glDisable(GL_TEXTURE_2D)
 
-    #Block Draw: TODO: Move texturing to Block.py so can be removed below
+    #Player Block
     glEnable(GL_TEXTURE_2D)
-    glEnable(GL_COLOR_MATERIAL)
     glEnable(GL_LIGHTING)
     drawBlock()
     glDisable(GL_LIGHTING)
 
+    #Axes for guidance
+    #ruler()
 
     glutSwapBuffers()
 
+def ruler():
+    # ORIGIN = PINK
+    glPushMatrix()
+    glColor3f(1.0, 0, 1.0)
+    glTranslatef(0, 0, 0)
+    glutSolidCube(0.125)
+    glPopMatrix()
+
+    # 1 in Y direction = BLUE
+    glPushMatrix()
+    glColor3f(0, 0, 1.0)
+    glTranslatef(0, 1.0, 0)
+    glutSolidCube(0.125)
+    glTranslatef(0, -1.0, 0)
+    glPopMatrix()
+
+    # -1 in Z direction = RED
+    glPushMatrix()
+    glColor3f(1.0, 0, 0)
+    glTranslatef(0, 0, -1.0)
+    glutSolidCube(0.125)
+    glTranslatef(0, 0, 1.0)
+    glPopMatrix()
+
+    # 1 in X direction = GREEN
+    glPushMatrix()
+    glColor3f(0, 1.0, 0)
+    glTranslatef(1.0, 0, 0)
+    glutSolidCube(0.125)
+    glTranslatef(-1.0, 0, 0)
+    glPopMatrix()
+
+
 def drawBlock():
-    global metalTexID
-    def ruler():
-        # ORIGIN = PINK
-        glPushMatrix()
-        glColor3f(1.0, 0, 1.0)
-        glTranslatef(0, 0, 0)
-        glutSolidCube(0.125)
-        glPopMatrix()
-
-        # 1 in Y direction = BLUE
-        glPushMatrix()
-        glColor3f(0, 0, 1.0)
-        glTranslatef(0, 1.0, 0)
-        glutSolidCube(0.125)
-        glTranslatef(0, -1.0, 0)
-        glPopMatrix()
-
-        # -1 in Z direction = RED
-        glPushMatrix()
-        glColor3f(1.0, 0, 0)
-        glTranslatef(0, 0, -1.0)
-        glutSolidCube(0.125)
-        glTranslatef(0, 0, 1.0)
-        glPopMatrix()
-
-        # 1 in X direction = GREEN
-        glPushMatrix()
-        glColor3f(0, 1.0, 0)
-        glTranslatef(1.0, 0, 0)
-        glutSolidCube(0.125)
-        glTranslatef(-1.0, 0, 0)
-        glPopMatrix()
-
-        x = [20, 0, 0]
-        y = [0, 20, 0]
-        z = [0, 0, -20]
-        o = [0, 0, 0]
-
-        glBegin(GL_LINES)
-
-        glColor3fv([0, 1, 0])
-        glVertex3fv(o)
-        glVertex3fv(x)
-
-        glColor3fv([0, 0, 1])
-        glVertex3fv(o)
-        glVertex3fv(y)
-
-        glColor3fv([1, 0, 0])
-        glVertex3fv(o)
-        glVertex3fv(z)
-
-        glEnd()
-
+    global metalTexID, orientation, positionX, positionZ
     def drawLongFace():
         glPushMatrix()
-
         glBegin(GL_QUADS)
         glVertex3f(0, 0, 0); glTexCoord2f(0, 0)
         glVertex3f(1.0, 0, 0); glTexCoord2f(2, 0)
         glVertex3f(1.0, 2.0, 0); glTexCoord2f(2, 2)
         glVertex3f(0, 2.0, 0); glTexCoord2f(0, 2)
         glEnd()
-
         glPopMatrix()
 
     def drawSquareFace():
         glPushMatrix()
-
         glBegin(GL_QUADS)
         glVertex3f(0, 0, 0); glTexCoord2f(0, 0)
         glVertex3f(0, 0, -1.0); glTexCoord2f(1, 0)
         glVertex3f(0, 1.0, -1.0); glTexCoord2f(1, 1)
         glVertex3f(0, 1.0, 0); glTexCoord2f(0, 1)
         glEnd()
-
         glPopMatrix()
 
-
     glPushMatrix()
-    #glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
-   # glDisable(GL_COLOR_MATERIAL)
     glBindTexture(GL_TEXTURE_2D, metalTexID)
 
     # #State 1 to State 2
-
-
+    # glRotatef(90, 0, 1.0, 0)
+    # glTranslatef(-1.0, 0, 0)
+    # glRotatef(90, 1.0, 0, 0)
 
     #State 2 to State 2
     # glRotatef(90, 0, 1.0, 0)
     # glTranslatef(0, 0, -1)
     # glRotatef(-90, 0, 1.0, 0)
 
-#        glColor3f(0.6, 0.6, 0.6)
-    #TOP, 2 SIDES, and BOTTOM
     glTranslatef(0, -0.5, 0)
-
-    # glTranslatef(3.0, 0, -6.0)
-    # glRotatef(90, 0, 1.0, 0)
-    # glTranslatef(-1.0, 0, 0)
-    # glRotatef(90, 1.0, 0, 0)
-
-
+    glTranslatef(float(positionX), 0, float(positionZ))
+    #TOP, 2 SIDES, and BOTTOM
     drawLongFace()
     glRotatef(90, 0, 0, -1)
     drawSquareFace()
@@ -220,70 +193,49 @@ def drawBlock():
     glRotatef(90, 0, 0, 1.0)
     glTranslatef(-1.0, 0, 0)
     drawLongFace()
-
     glTranslatef(0, 0, -1.0)
     drawLongFace()
-
 
     glPopMatrix()
 
 
 
-def drawIceRink():
-    global iceTexID, waterTexID
-
+def drawIceField():
+    global iceTexID, waterTexID, water
     def drawLongTop():
         glPushMatrix()
-
         glBegin(GL_QUADS)
         glVertex3f(0, 0.5, 0.2); glTexCoord2f(0, 0)
         glVertex3f(-0.2, 0.5, 0.2); glTexCoord2f(1, 0)
         glVertex3f(-0.2, 0.5, -10.2); glTexCoord2f(1, 1)
         glVertex3f(0, 0.5, -10.2); glTexCoord2f(0, 1)
         glEnd()
-
         glPopMatrix()
 
     def drawLongSide():
         glPushMatrix()
-
         glBegin(GL_QUADS)
         glVertex3f(0, 0, 0.2); glTexCoord2f(1, 0)
         glVertex3f(0, 0.5, 0.2); glTexCoord2f(1, 1)
         glVertex3f(0, 0.5, -10.2); glTexCoord2f(0, 1)
         glVertex3f(0, 0, -10.2); glTexCoord2f(0, 0)
         glEnd()
-
         glPopMatrix()
 
     def drawShortSide():
         glPushMatrix()
-
         glBegin(GL_QUADS);
         glVertex3f(0, 0, 0.2); glTexCoord2f(1, 0)
         glVertex3f(0, 0.5, 0.2); glTexCoord2f(1, 1)
         glVertex3f(-0.2, 0.5, 0.2); glTexCoord2f(0, 1)
         glVertex3f(-0.2, 0, 0.2); glTexCoord2f(0, 0)
         glEnd()
-
         glPopMatrix()
 
-    #Drawing the ice
-    #With hardcoded water tiles
-    #Shameless
+    #Drawing the ice (with hardcoded water tiles, see "water" global var)
     for i in range(0, 10):
         for j in range(0, 10):
-            if (i == 2) and (j == 6):
-                glBindTexture(GL_TEXTURE_2D, waterTexID)
-            elif (i == 3) and (j == 4):
-                glBindTexture(GL_TEXTURE_2D, waterTexID)
-            elif (i == 7) and (j == 8):
-                glBindTexture(GL_TEXTURE_2D, waterTexID)
-            elif (i == 5) and (j == 5):
-                glBindTexture(GL_TEXTURE_2D, waterTexID)
-            elif (i == 7) and (j == 6):
-                glBindTexture(GL_TEXTURE_2D, waterTexID)
-            elif (i == 7) and (j == 2):
+            if (i, j) in water:
                 glBindTexture(GL_TEXTURE_2D, waterTexID)
             else:
                 glBindTexture(GL_TEXTURE_2D, iceTexID)
@@ -330,27 +282,81 @@ def drawIceRink():
         glRotatef(-90, 1.0, 0, 0)
     glRotatef(-90, 0, 0, 1.0)
 
-#User input to game, configured here
-#Or would be
+#User input to game configured here --> "W, A, S, D" for pivoting block in 4 cardinal directions
+# "orientation" block variable: Vertical = 0, Horizontal East-West = 1, Horizontal North-South = 2
+#Every +1/+2 to position indicates a movement to a new tile in that direction
 def keyPressed(key, x, y):
-    global bAltTexCoords, bRepeatTexture, blockHorizontal, rotationMode, player
+    global orientation, positionX, positionZ
 
     key = ord(key)
 
-    # if key == 27:
-    #     glutDestroyWindow(windowHandle)
-    #     sys.exit()
-    # elif key == ord('W') or key == ord('w'):
-    #     player.handleWPress()
-    # elif key == ord('S') or key == ord('s'):
-    #     player.handleSPress()
-    # elif key == ord('A') or key == ord('a'):
-    #     player.handleAPress()
-    # elif key == ord('D') or key == ord('d'):
-    #     player.handleDPress()
-    # else:
-    #     return
+    if key == 27:
+        glutDestroyWindow(windowHandle)
+        sys.exit()
+    elif key == ord('W') or key == ord('w'):
+        if orientation == 0:
+            #vertical, so change to horizontal North-South
+            orientation = 2
+            positionX += 1
+        elif orientation == 1:
+            #horizontal E-W, so remain horizontal E-W but update position
+            orientation = 1
+            positionX += 1
+        elif orientation == 2:
+            #horizontal N-S, so change to vertical
+            orientation = 0
+            positionX += 1
+    elif key == ord('S') or key == ord('s'):
+        if orientation == 0:
+            #vertical, so change to horizontal North-South
+            orientation = 2
+            positionX -= 1
+        elif orientation == 1:
+            #horizontal E-W, so remain horizontal E-W but update position
+            orientation = 1
+            positionX -= 1
+        elif orientation == 2:
+            #horizontal N-S, so change to vertical
+            orientation = 0
+            positionX -= 2
+    elif key == ord('A') or key == ord('a'):
+        if orientation == 0:
+            #vertical, so change to horizontal East-West
+            orientation = 1
+            positionZ -= 1
+        elif orientation == 1:
+            #horizontal E-W, so change to vertical
+            orientation = 0
+            positionZ -= 1
+        elif orientation == 2:
+            #horizontal N-S, so remain horizontal N-S but update position
+            orientation = 2
+            positionZ -= 1
+    elif key == ord('D') or key == ord('d'):
+        if orientation == 0:
+            #vertical, so change to horizontal East-West
+            orientation = 1
+            positionZ += 1
+        elif orientation == 1:
+            #horizontal E-W, so change to vertical
+            orientation = 0
+            positionZ += 1
+        elif orientation == 2:
+            #horizontal N-S, so remain horizontal N-S but update position
+            orientation = 2
+            positionZ += 1
+    else:
+        return
 
+    if positionX >= 9:
+        positionX = 9
+    if positionX <= 0:
+        positionX = 0
+
+    if positionZ <= -9:
+        positionZ = -9
+    if positionZ >= 0:
+        positionZ = 0
 
 def main():
     global windowHandle, mouseInteract
@@ -371,35 +377,34 @@ def main():
     mouseInteract.registerCallbacks( )
 
     glutDisplayFunc( drawGLScene )
-
     glutIdleFunc( drawGLScene )
-
     glutReshapeFunc( resizeGLScene )
+    #Permit player input
     glutKeyboardFunc( keyPressed )
 
-
     initGL( width, height )
-
+    print("IcePath: The PyOpenGL Puzzle Game\n")
+    print("Controls:")
+    print("Use W, A, S, D to pivot the block around")
+    print("Press Escape to quit\n")
     glutMainLoop( )
 
 def resizeGLScene( width, height):
-    # prevent a divide-by-zero error if the window is too small
+    #Prevent a divide-by-zero error if the window is too small
     if height == 0:
         height = 1
 
-    # reset the current viewport
+    #Reset the current viewport
     glViewport(0, 0, width, height)
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
     gluPerspective(45.0, float(width) / float(height), 0.1, 100.0)
 
-    # return to the modelview matrix mode
     glMatrixMode(GL_MODELVIEW)
 
 
 def LoadImage(file):
     image = Image( )
-
     try:
         foo = open( file )
 
@@ -412,10 +417,7 @@ def LoadImage(file):
 
     return image
 
-
-#
-# Initialises the textures being used for the scene
-#
+#Initialise the textures being used for the scene
 def InitTexturing():
     global waterImage, iceImage, waterTexID, iceTexID, blockImage, blockTexID, metalImage, metalTexID
 
